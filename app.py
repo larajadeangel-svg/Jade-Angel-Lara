@@ -202,9 +202,17 @@ def index():
                     <option value="4th Year">4th Year</option>
                 </select>
 
-                <label>Course</label>
-                <input id="section" type="text" placeholder="e.g., SE, CS, IT">
-
+               <label>Course</label>
+               <select id="section">
+                   <option value="">Select Course</option>
+                   <option value="BSIT">BSIT</option>
+                   <option value="BSED">BSED</option>
+                   <option value="BEED">BEED</option>
+                   <option value="BSOA">BSOA</option>
+                   <option value="BSHM">BSHM</option>
+                   <option value="BSA">BSA</option>
+                </select>
+                
                 <button id="submitBtn" onclick="saveStudent()">Save Student</button>
             </div>
 
