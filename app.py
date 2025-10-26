@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, Response
+from flask import Flask, Response
 
 app = Flask(__name__)
 
@@ -30,29 +30,13 @@ def index():
                 flex-direction: column;
                 color: white;
                 padding: 30px 20px;
+                align-items: center;
             }
 
             .sidebar h2 {
                 font-size: 22px;
                 text-align: center;
                 margin-bottom: 30px;
-            }
-
-            .sidebar button {
-                background: none;
-                border: none;
-                color: #dfe3ff;
-                text-align: left;
-                padding: 12px 15px;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: 0.3s;
-                font-size: 15px;
-            }
-
-            .sidebar button.active {
-                background: #333;
-                color: white;
             }
 
             /* Main Content */
@@ -181,7 +165,6 @@ def index():
     <body>
         <div class="sidebar">
             <h2>Student Management System</h2>
-            <button class="active">Students</button>
         </div>
 
         <div class="main">
@@ -202,15 +185,15 @@ def index():
                     <option value="4th Year">4th Year</option>
                 </select>
 
-               <label>Course</label>
-               <select id="section">
-                   <option value="">Select Course</option>
-                   <option value="BSIT">BSIT</option>
-                   <option value="BSED">BSED</option>
-                   <option value="BEED">BEED</option>
-                   <option value="BSOA">BSOA</option>
-                   <option value="BSHM">BSHM</option>
-                   <option value="BSA">BSA</option>
+                <label>Course</label>
+                <select id="section">
+                    <option value="">Select Course</option>
+                    <option value="BSIT">BSIT</option>
+                    <option value="BSED">BSED</option>
+                    <option value="BEED">BEED</option>
+                    <option value="BSOA">BSOA</option>
+                    <option value="BSHM">BSHM</option>
+                    <option value="BSA">BSA</option>
                 </select>
                 
                 <button id="submitBtn" onclick="saveStudent()">Save Student</button>
@@ -230,7 +213,7 @@ def index():
         </div>
 
         <script>
-            let students = [];
+            let students = JSON.parse(localStorage.getItem("students")) || [];
             let editingIndex = -1;
 
             function toggleForm() {
@@ -244,7 +227,7 @@ def index():
             }
 
             function saveStudent() {
-                const name = document.getElementById("name").value;
+                const name = document.getElementById("name").value.trim();
                 const year = document.getElementById("year").value;
                 const section = document.getElementById("section").value;
 
@@ -261,6 +244,7 @@ def index():
                     students[editingIndex] = student;
                 }
 
+                localStorage.setItem("students", JSON.stringify(students));
                 renderTable();
                 toggleForm();
             }
@@ -296,9 +280,13 @@ def index():
             function deleteStudent(i) {
                 if (confirm('Delete ' + students[i].name + '?')) {
                     students.splice(i, 1);
+                    localStorage.setItem("students", JSON.stringify(students));
                     renderTable();
                 }
             }
+
+            // Render students from localStorage on page load
+            window.onload = renderTable;
         </script>
     </body>
     </html>
