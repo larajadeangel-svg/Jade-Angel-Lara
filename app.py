@@ -185,9 +185,9 @@ def index():
         </div>
 
         <div class="main">
-            <h2>Registered Students</h2>
+            <h2>Register Students</h2>
 
-            <button id="addStudentBtn" onclick="toggleForm()">+ Add Student</button>
+            <button id="addStudentBtn" onclick="toggleForm()">Add Student</button>
 
             <div class="card" id="studentForm">
                 <label>Full Name</label>
@@ -205,7 +205,7 @@ def index():
                 <label>Course</label>
                 <input id="section" type="text" placeholder="e.g., SE, CS, IT">
 
-                <button id="submitBtn" onclick="postStudent()">Add Student</button>
+                <button id="submitBtn" onclick="saveStudent()">Save Student</button>
             </div>
 
             <table id="studentTable">
@@ -222,36 +222,39 @@ def index():
         </div>
 
         <script>
-            const students = [];
+            let students = [];
+            let editingIndex = -1;
 
             function toggleForm() {
                 const form = document.getElementById("studentForm");
                 form.style.display = (form.style.display === "block") ? "none" : "block";
+                editingIndex = -1;
+                document.getElementById("submitBtn").innerText = "Add Student";
+                document.getElementById("name").value = "";
+                document.getElementById("year").value = "";
+                document.getElementById("section").value = "";
             }
 
-            function postStudent() {
-                const body = {
-                    name: document.getElementById("name").value,
-                    year: document.getElementById("year").value,
-                    section: document.getElementById("section").value
-                };
+            function saveStudent() {
+                const name = document.getElementById("name").value;
+                const year = document.getElementById("year").value;
+                const section = document.getElementById("section").value;
 
-                fetch('/student', {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(body)
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.student) {
-                        students.push(data.student);
-                        renderTable();
-                        document.getElementById("studentForm").style.display = "none";
-                        document.getElementById("name").value = "";
-                        document.getElementById("year").value = "";
-                        document.getElementById("section").value = "";
-                    }
-                });
+                if (!name || !year || !section) {
+                    alert("Please fill out all fields");
+                    return;
+                }
+
+                const student = { name, "year level": year, course: section };
+
+                if (editingIndex === -1) {
+                    students.push(student);
+                } else {
+                    students[editingIndex] = student;
+                }
+
+                renderTable();
+                toggleForm();
             }
 
             function renderTable() {
@@ -273,7 +276,13 @@ def index():
             }
 
             function editStudent(i) {
-                alert('Edit function coming soon for: ' + students[i].name);
+                const s = students[i];
+                document.getElementById("name").value = s.name;
+                document.getElementById("year").value = s["year level"];
+                document.getElementById("section").value = s.course;
+                document.getElementById("studentForm").style.display = "block";
+                document.getElementById("submitBtn").innerText = "Update Student";
+                editingIndex = i;
             }
 
             function deleteStudent(i) {
@@ -287,24 +296,6 @@ def index():
     </html>
     """
     return Response(html_content, mimetype="text/html")
-
-
-@app.route('/student', methods=['POST'])
-def add_student():
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No JSON data provided"}), 400
-    required = ["name", "year", "section"]
-    if not all(field in data and data[field] for field in required):
-        return jsonify({"error": "Missing required fields"}), 400
-    return jsonify({
-        "message": "Student added successfully",
-        "student": {
-            "name": data["name"],
-            "year level": data["year"],
-            "course": data["section"]
-        }
-    }), 201
 
 
 if __name__ == "__main__":
