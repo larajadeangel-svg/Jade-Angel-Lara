@@ -161,7 +161,7 @@ def index():
     </head>
     <body>
         <div class="sidebar">
-            <h2>📘 Student DB</h2>
+            <h2>Student Management System</h2>
             <button class="active">Students</button>
         </div>
 
