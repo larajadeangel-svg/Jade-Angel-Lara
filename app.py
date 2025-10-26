@@ -2,7 +2,6 @@ from flask import Flask, jsonify, request, Response
 
 app = Flask(__name__)
 
-# Serve HTML UI directly from Python
 @app.route('/')
 def index():
     html_content = """
@@ -10,59 +9,71 @@ def index():
     <html lang="en">
     <head>
     <meta charset="UTF-8">
-    <title>Student API Interface</title>
+    <title>Student Management System</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #eee;
+            font-family: 'Poppins', sans-serif;
+            background: #111;
             padding: 20px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
+            color: #fff;
         }
         .box {
             width: 420px;
-            background: #fff;
+            background: #222;
             border-radius: 10px;
             padding: 25px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            box-shadow: 0 0 18px rgba(255,255,255,0.05);
         }
         h2 {
             text-align: center;
-            color: #222;
+            color: #e0e0e0;
+            margin-bottom: 20px;
         }
         input, button {
             width: 100%;
-            padding: 10px;
-            margin: 8px 0;
+            padding: 12px;
+            margin: 10px 0;
             border-radius: 6px;
-            border: 1px solid #ccc;
+            border: none;
             font-size: 15px;
         }
+        input {
+            background: #333;
+            color: #eee;
+            border: 1px solid #444;
+        }
         button {
-            background: #007bff;
+            background: #444;
             color: #fff;
-            border: none;
             cursor: pointer;
             font-weight: bold;
         }
         button:hover {
-            background: #0056b3;
+            background: #555;
         }
         .output {
             margin-top: 12px;
-            background: #eaf3ff;
+            background: #333;
             padding: 12px;
             border-radius: 6px;
             display: none;
             font-size: 14px;
+            border: 1px solid #555;
+            color: #e0e0e0;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
         }
     </style>
     </head>
     <body>
 
     <div class="box">
-        <h2>Student API</h2>
+        <h2>Student Management System</h2>
 
         <input id="name" type="text" placeholder="Student Name">
         <input id="grade" type="number" placeholder="Grade Level">
@@ -153,4 +164,4 @@ def add_student():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
