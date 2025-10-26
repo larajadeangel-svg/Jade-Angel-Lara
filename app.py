@@ -74,6 +74,25 @@ def index():
                 color: #fff;
             }
 
+            /* Add Student Button */
+            #addStudentBtn {
+                background: #00bcd4;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 16px;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 14px;
+                margin-top: 10px;
+                width: fit-content;
+                transition: 0.3s;
+            }
+
+            #addStudentBtn:hover {
+                background: #0097a7;
+            }
+
             /* Table */
             table {
                 width: 100%;
@@ -168,6 +187,8 @@ def index():
         <div class="main">
             <h2>Registered Students</h2>
 
+            <button id="addStudentBtn" onclick="toggleForm()">+ Add Student</button>
+
             <div class="card" id="studentForm">
                 <label>Full Name</label>
                 <input id="name" type="text" placeholder="Enter student name">
@@ -203,6 +224,11 @@ def index():
         <script>
             const students = [];
 
+            function toggleForm() {
+                const form = document.getElementById("studentForm");
+                form.style.display = (form.style.display === "block") ? "none" : "block";
+            }
+
             function postStudent() {
                 const body = {
                     name: document.getElementById("name").value,
@@ -220,7 +246,10 @@ def index():
                     if (data.student) {
                         students.push(data.student);
                         renderTable();
-                        document.getElementById("studentForm").reset;
+                        document.getElementById("studentForm").style.display = "none";
+                        document.getElementById("name").value = "";
+                        document.getElementById("year").value = "";
+                        document.getElementById("section").value = "";
                     }
                 });
             }
