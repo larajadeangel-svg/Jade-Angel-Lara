@@ -9,7 +9,7 @@ def index():
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Registered Students</title>
+        <title>Student Management System</title>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
