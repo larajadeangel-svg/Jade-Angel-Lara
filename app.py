@@ -1,14 +1,28 @@
 from flask import Flask, jsonify, request, Response
+import json, os
 
 app = Flask(__name__)
 
-# Temporary in-memory student storage
-students = [
-    {"id": 1, "name": "John Doe", "year": "1st Year", "course": "SE"},
-    {"id": 2, "name": "Jane Smith", "year": "2nd Year", "course": "CS"}
-]
+DATA_FILE = "students.json"
 
 
+# --- Helper Functions ---
+def load_students():
+    """Load students from JSON file."""
+    if not os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "w") as f:
+            json.dump([], f)
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_students(students):
+    """Save student list to JSON file."""
+    with open(DATA_FILE, "w") as f:
+        json.dump(students, f, indent=4)
+
+
+# --- Routes ---
 @app.route('/')
 def index():
     html_content = """
@@ -16,280 +30,284 @@ def index():
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Student Management System</title>
+        <title>Student Management Dashboard</title>
         <style>
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
             body {
                 font-family: 'Poppins', sans-serif;
-                background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
-                color: #fff;
+                background: #f5f6fa;
+                margin: 0;
                 display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-                padding: 40px;
-            }
-            .container {
-                width: 90%;
-                max-width: 800px;
-                background: #222;
-                border-radius: 12px;
-                box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
-                padding: 25px;
-            }
-            h2 {
-                text-align: left;
-                margin-bottom: 15px;
-                color: #f2f2f2;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 10px;
-                background: #1c1c1c;
-                border-radius: 6px;
+                height: 100vh;
                 overflow: hidden;
             }
-            th, td {
-                padding: 10px 12px;
+
+            /* Sidebar */
+            .sidebar {
+                background: #304FFE;
+                width: 250px;
+                display: flex;
+                flex-direction: column;
+                color: white;
+                padding: 30px 20px;
+            }
+
+            .sidebar h2 {
+                font-size: 22px;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .sidebar button {
+                background: none;
+                border: none;
+                color: #dfe3ff;
                 text-align: left;
-                border-bottom: 1px solid #333;
+                padding: 12px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: 0.3s;
+                font-size: 15px;
             }
-            th {
-                background: #333;
+
+            .sidebar button:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            /* Main Content */
+            .main {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                background: #fff;
+                border-radius: 20px 0 0 20px;
+                margin: 20px;
+                padding: 25px 40px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                overflow-y: auto;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .header h2 {
+                color: #2c2c2c;
                 font-weight: 600;
-                color: #fff;
             }
-            tr:hover {
-                background: #2a2a2a;
+
+            .add-btn {
+                background: #304FFE;
+                color: white;
+                padding: 10px 18px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: 0.3s;
             }
-            input, select, button {
+
+            .add-btn:hover {
+                background: #1e36c8;
+            }
+
+            /* Form Card */
+            .card {
+                background: #f8f9ff;
+                padding: 20px;
+                margin-top: 25px;
+                border-radius: 12px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            label {
+                font-weight: 500;
+                display: block;
+                margin-bottom: 6px;
+                color: #333;
+            }
+
+            input, select {
+                width: 100%;
                 padding: 10px;
                 border-radius: 6px;
-                border: none;
+                border: 1px solid #ccc;
                 font-size: 14px;
-                margin: 5px 0;
             }
-            input, select {
-                background: #333;
-                color: #fff;
-                width: 100%;
-                border: 1px solid #555;
-            }
-            .actions button {
-                background: #444;
-                color: #fff;
-                margin-right: 5px;
-                padding: 6px 12px;
-                border-radius: 6px;
-                border: none;
-                cursor: pointer;
-                transition: 0.3s;
-            }
-            .actions button:hover {
-                background: #666;
-            }
-            .form-section {
-                margin-top: 20px;
-                border-top: 1px solid #333;
-                padding-top: 15px;
-            }
-            .form-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            .buttons {
+
+            #submitBtn {
                 margin-top: 10px;
-                display: flex;
-                gap: 10px;
-            }
-            .save-btn {
-                background: #007bff;
-            }
-            .save-btn:hover {
-                background: #0056b3;
-            }
-            .clear-btn {
-                background: #555;
-            }
-            .clear-btn:hover {
-                background: #777;
-            }
-            .search-area {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 10px;
-            }
-            .search-area input {
-                flex: 1;
-            }
-            .search-btn, .refresh-btn {
-                background: #007bff;
-                color: #fff;
-                padding: 8px 14px;
+                background: #304FFE;
+                color: white;
+                padding: 12px 15px;
                 border: none;
-                border-radius: 6px;
+                border-radius: 8px;
                 cursor: pointer;
+                font-weight: 600;
+                width: 100%;
                 transition: 0.3s;
             }
-            .refresh-btn {
-                background: #555;
+
+            #submitBtn:hover {
+                background: #1e36c8;
             }
-            .search-btn:hover {
-                background: #0056b3;
+
+            .output {
+                margin-top: 20px;
+                background: #eef1ff;
+                padding: 15px;
+                border-radius: 8px;
+                display: none;
+                color: #333;
             }
-            .refresh-btn:hover {
-                background: #777;
+
+            /* Table */
+            table {
+                width: 100%;
+                margin-top: 25px;
+                border-collapse: collapse;
+                background: #fafbff;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+
+            th, td {
+                padding: 14px 16px;
+                border-bottom: 1px solid #ddd;
+                text-align: left;
+            }
+
+            th {
+                background: #304FFE;
+                color: white;
+                font-weight: 600;
+            }
+
+            tr:hover {
+                background: #f2f3ff;
+            }
+
+            pre {
+                white-space: pre-wrap;
+                margin: 0;
             }
         </style>
     </head>
     <body>
-        <div class="container">
-            <h2>Students</h2>
-            <div class="search-area">
-                <input type="text" id="search" placeholder="Search name...">
-                <button class="search-btn" onclick="searchStudent()">Search</button>
-                <button class="refresh-btn" onclick="loadStudents()">Refresh</button>
+        <div class="sidebar">
+            <h2>Student Dashboard</h2>
+            <button>Dashboard</button>
+            <button>Students</button>
+            <button>Courses</button>
+            <button>Reports</button>
+            <button>Settings</button>
+        </div>
+
+        <div class="main">
+            <div class="header">
+                <h2>Student Dashboard</h2>
+                <button class="add-btn" onclick="toggleForm()">+ Add Student</button>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Year</th>
-                        <th>Course</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="studentTable"></tbody>
-            </table>
+            <div class="card" id="studentForm" style="display:none;">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input id="name" type="text" placeholder="Enter student name">
+                </div>
 
-            <div class="form-section">
-                <h3>Add / Edit Student</h3>
-                <input type="hidden" id="studentId">
-                <input type="text" id="name" placeholder="Full name">
-                <div class="form-grid">
+                <div class="form-group">
+                    <label>Year Level</label>
                     <select id="year">
-                        <option value="">Select Year</option>
+                        <option value="">Select Year Level</option>
                         <option value="1st Year">1st Year</option>
                         <option value="2nd Year">2nd Year</option>
                         <option value="3rd Year">3rd Year</option>
                         <option value="4th Year">4th Year</option>
                     </select>
-                    <input type="text" id="course" placeholder="Course (e.g., SE, CS, IT)">
                 </div>
-                <div class="buttons">
-                    <button class="save-btn" onclick="saveStudent()">Save</button>
-                    <button class="clear-btn" onclick="clearForm()">Clear</button>
+
+                <div class="form-group">
+                    <label>Course</label>
+                    <input id="section" type="text" placeholder="e.g., SE, CS, IT">
                 </div>
+
+                <button id="submitBtn" onclick="postStudent()">Submit Student</button>
             </div>
+
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Year Level</th>
+                        <th>Course</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div class="output" id="responseBox"></div>
         </div>
 
         <script>
-            let editId = null;
+            function toggleForm() {
+                const form = document.getElementById("studentForm");
+                form.style.display = form.style.display === "none" ? "block" : "none";
+            }
+
+            function postStudent() {
+                const body = {
+                    name: document.getElementById("name").value,
+                    year: document.getElementById("year").value,
+                    section: document.getElementById("section").value
+                };
+
+                fetch('/student', {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(body)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    show(data);
+                    if (data.student) addToTable(data.student);
+                });
+            }
+
+            function show(data) {
+                const output = document.getElementById("responseBox");
+                output.style.display = "block";
+                output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+
+            function addToTable(student) {
+                const tableBody = document.querySelector("#studentTable tbody");
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student["year level"]}</td>
+                    <td>${student.course}</td>
+                `;
+                tableBody.appendChild(row);
+            }
 
             function loadStudents() {
                 fetch('/students')
                     .then(res => res.json())
                     .then(data => {
-                        const table = document.getElementById('studentTable');
-                        table.innerHTML = '';
-                        data.forEach(stu => {
-                            table.innerHTML += `
-                                <tr>
-                                    <td>${stu.id}</td>
-                                    <td>${stu.name}</td>
-                                    <td>${stu.year}</td>
-                                    <td>${stu.course}</td>
-                                    <td class='actions'>
-                                        <button onclick='editStudent(${stu.id})'>Edit</button>
-                                        <button onclick='deleteStudent(${stu.id})'>Delete</button>
-                                    </td>
-                                </tr>
-                            `;
-                        });
+                        const tableBody = document.querySelector("#studentTable tbody");
+                        tableBody.innerHTML = "";
+                        data.students.forEach(s => addToTable(s));
                     });
             }
 
-            function searchStudent() {
-                const name = document.getElementById('search').value.toLowerCase();
-                fetch('/students')
-                    .then(res => res.json())
-                    .then(data => {
-                        const filtered = data.filter(s => s.name.toLowerCase().includes(name));
-                        const table = document.getElementById('studentTable');
-                        table.innerHTML = '';
-                        filtered.forEach(stu => {
-                            table.innerHTML += `
-                                <tr>
-                                    <td>${stu.id}</td>
-                                    <td>${stu.name}</td>
-                                    <td>${stu.year}</td>
-                                    <td>${stu.course}</td>
-                                    <td class='actions'>
-                                        <button onclick='editStudent(${stu.id})'>Edit</button>
-                                        <button onclick='deleteStudent(${stu.id})'>Delete</button>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                    });
-            }
-
-            function saveStudent() {
-                const name = document.getElementById('name').value;
-                const year = document.getElementById('year').value;
-                const course = document.getElementById('course').value;
-
-                if (!name || !year || !course) {
-                    alert("Please fill in all fields!");
-                    return;
-                }
-
-                const method = editId ? "PUT" : "POST";
-                const url = editId ? `/students/${editId}` : '/students';
-
-                fetch(url, {
-                    method: method,
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, year, course })
-                })
-                .then(res => res.json())
-                .then(() => {
-                    clearForm();
-                    loadStudents();
-                });
-            }
-
-            function editStudent(id) {
-                fetch('/students')
-                    .then(res => res.json())
-                    .then(data => {
-                        const stu = data.find(s => s.id === id);
-                        if (stu) {
-                            document.getElementById('studentId').value = stu.id;
-                            document.getElementById('name').value = stu.name;
-                            document.getElementById('year').value = stu.year;
-                            document.getElementById('course').value = stu.course;
-                            editId = id;
-                        }
-                    });
-            }
-
-            function deleteStudent(id) {
-                fetch(`/students/${id}`, { method: "DELETE" })
-                    .then(() => loadStudents());
-            }
-
-            function clearForm() {
-                editId = null;
-                document.getElementById('name').value = '';
-                document.getElementById('year').value = '';
-                document.getElementById('course').value = '';
-            }
-
-            window.onload = loadStudents;
+            loadStudents();
         </script>
     </body>
     </html>
@@ -297,37 +315,35 @@ def index():
     return Response(html_content, mimetype="text/html")
 
 
+@app.route('/student', methods=['POST'])
+def add_student():
+    students = load_students()
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+
+    required = ["name", "year", "section"]
+    if not all(field in data and data[field] for field in required):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    student = {
+        "name": data["name"],
+        "year level": data["year"],
+        "course": data["section"]
+    }
+    students.append(student)
+    save_students(students)
+
+    return jsonify({
+        "message": "Student added successfully",
+        "student": student
+    }), 201
+
+
 @app.route('/students', methods=['GET'])
 def get_students():
-    return jsonify(students)
-
-
-@app.route('/students', methods=['POST'])
-def add_student():
-    data = request.get_json()
-    if not data or not all(k in data for k in ('name', 'year', 'course')):
-        return jsonify({"error": "Missing data"}), 400
-    new_id = max([s["id"] for s in students], default=0) + 1
-    student = {"id": new_id, **data}
-    students.append(student)
-    return jsonify(student), 201
-
-
-@app.route('/students/<int:student_id>', methods=['PUT'])
-def update_student(student_id):
-    data = request.get_json()
-    for s in students:
-        if s["id"] == student_id:
-            s.update(data)
-            return jsonify(s)
-    return jsonify({"error": "Student not found"}), 404
-
-
-@app.route('/students/<int:student_id>', methods=['DELETE'])
-def delete_student(student_id):
-    global students
-    students = [s for s in students if s["id"] != student_id]
-    return jsonify({"message": "Deleted"}), 200
+    return jsonify({"students": load_students()})
 
 
 if __name__ == "__main__":
